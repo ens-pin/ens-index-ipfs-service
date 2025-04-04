@@ -13,8 +13,11 @@
   },
   "dependencies": {
     "@ensdomains/content-hash": "^3.0.0",
+    "commander": "^13.1.0",
     "hono": "^4.5.0",
+    "kubo-rpc-client": "^5.1.0",
     "ponder": "^0.10.8",
+    "sst": "^3.12.3",
     "viem": "^2.21.3"
   },
   "devDependencies": {
