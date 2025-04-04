@@ -13,7 +13,12 @@
   },
   "dependencies": {
     "@ensdomains/content-hash": "^3.0.0",
+    "@ponder/core": "^0.7.17",
+    "@pulumi/digitalocean": "^4.41.0",
+    "@pulumi/pulumi": "^3.160.0",
     "commander": "^13.1.0",
+    "dotenv": "^16.4.7",
+    "dots-wrapper": "^3.11.16",
     "hono": "^4.5.0",
     "kubo-rpc-client": "^5.1.0",
     "ponder": "^0.10.8",

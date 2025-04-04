@@ -1,8 +1,3 @@
-/// @description: base adapter class that contains the common methods
-/// @description: for all adapters
-
-import { pinFile } from "./adapter.manager";
-
 /// @summary
 /// This class is supposed to implement the common methods
 /// This class shouldn't be used standalone
@@ -29,7 +24,7 @@ export class IpfsNodeAdapter {
     }
 
     /// @description: update the available storage quota for a node in the database
-    public adjustQuota(): void{
+    public adjustQuota(new_quota: BigInt): void{
         
     }
 
@@ -37,29 +32,3 @@ export class IpfsNodeAdapter {
         return Promise.resolve([BigInt(0), BigInt(0)]);
     }
 };
-
-/*
-import { create } from "kubo-rpc-client";
-
-
-const ipfs_client = create(
-    {
-        url: "http://127.0.0.1:5001"
-    }
-);
-
-export async function pinFile(fileHash: string): Promise<void> {
-    await ipfs_client.get(fileHash)
-    ipfs_client.pin.add(fileHash).then(
-        value => {
-            console.log(value)
-            ipfs_client.routing.provide(fileHash)
-            console.log(fileHash);
-        },
-        onrejected => {
-            console.log("Error pinning file: ", onrejected);
-        }
-    )
-    console.log("hmm")
-}
-*/
