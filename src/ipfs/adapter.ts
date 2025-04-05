@@ -1,43 +1,61 @@
-/// @summary
-/// This class is supposed to implement the common methods
-/// This class shouldn't be used standalone
-/// The children classes should be used
-export class IpfsNodeAdapter {
-    /// @description: the quota of this particular node type
-    /// if the node exceeds the quota, it will not pin the file
-    quota: number;
+/**
+ * @summary
+ * Abstract class representing a common interface for IPFS node adapters.
+ * This class is not meant to be used standalone; it should be extended by child classes.
+ */
+export abstract class IpfsNodeAdapter {
+    /**
+     * @description The quota of this particular node type.
+     * If the node exceeds the quota, it will not pin the file.
+     */
+    protected quota: number;
 
-    /// @description: The amount of quota this particular node has already consumed
-    quota_used: number;
+    /**
+     * @description The amount of quota this particular node has already consumed.
+     */
+    protected quotaUsed: number;
 
-    constructor(quota: number = -1, quota_used: number = 0) {
+    constructor(quota: number = -1, quotaUsed: number = 0) {
         this.quota = quota;
-        this.quota_used = quota_used;
-    }
-    /// pin the file to the IPFS node
-    public async pinFile(fileHash: string): Promise<number> {
-        return Promise.resolve(0);
+        this.quotaUsed = quotaUsed;
     }
 
-    // unpin the file from the IPFS node
-    public async unpinFile(fileHash: string): Promise<void> {
-        return Promise.resolve();
-    }
+    /**
+     * @description Pins a file to the IPFS node.
+     * @param fileHash The hash of the file to pin.
+     * @returns A promise resolving to the size of the pinned file in bytes.
+     */
+    public abstract pinFile(fileHash: string): Promise<number>;
 
-    public async getFileSize(fileHash: string): Promise<number> {
-        return Promise.resolve(0);
-    }
+    /**
+     * @description Unpins a file from the IPFS node.
+     * @param fileHash The hash of the file to unpin.
+     */
+    public abstract unpinFile(fileHash: string): Promise<void>;
 
-    public isOverQuota(fileHash: string): boolean{
-        return false;
-    }
+    /**
+     * @description Retrieves the size of a file from the IPFS node.
+     * @param fileHash The hash of the file.
+     * @returns A promise resolving to the size of the file in bytes.
+     */
+    public abstract getFileSize(fileHash: string): Promise<number>;
 
-    /// @description: update the available storage quota for a node in the database
-    public adjustQuota(new_quota: BigInt): void{
-        
-    }
+    /**
+     * @description Checks if the node is over its quota.
+     * @param fileHash The hash of the file to check.
+     * @returns A boolean indicating whether the node is over quota.
+     */
+    public abstract isOverQuota(fileHash: string): boolean;
 
-    public getQuotaRange(): Promise<[bigint, bigint]> {
-        return Promise.resolve([BigInt(0), BigInt(0)]);
-    }
-};
+    /**
+     * @description Updates the available storage quota for the node.
+     * @param newQuota The new quota value.
+     */
+    public abstract adjustQuota(newQuota: bigint): void;
+
+    /**
+     * @description Retrieves the quota range for the node.
+     * @returns A promise resolving to a tuple containing the minimum and maximum quota values.
+     */
+    public abstract getQuotaRange(): Promise<[bigint, bigint]>;
+}
