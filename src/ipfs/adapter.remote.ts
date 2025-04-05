@@ -32,7 +32,7 @@ export class RemoteNodeAdapter extends IpfsNodeAdapter {
     }
 
     /// pin the file to the remote IPFS node
-    public async pinFile(fileHash: string): Promise<void> {
+    public async pinFile(fileHash: string): Promise<number> {
         await this.ipfs_client.get(fileHash);
         this.ipfs_client.pin.add(fileHash).then(
             value => {
@@ -42,9 +42,29 @@ export class RemoteNodeAdapter extends IpfsNodeAdapter {
                 console.log("Error pinning file: ", onrejected);
             }
         )
+        let value = await this.ipfs_client.files.stat("/ipfs/" + fileHash)
+        return value.size
     }
 
-    public isOverQuota(): boolean{
+    public async unpinFile(fileHash: string): Promise<void> {
+        // unpin the file from the IPFS node
+        this.ipfs_client.pin.rm(fileHash).then(
+            value => {
+                this.ipfs_client.repo.gc();
+            },
+            onrejected => {
+                console.log("Error unpinning file: ", onrejected);
+            }
+        )
+    }
+
+    public isOverQuota(fileHash: String): boolean{
+        // Check if the ipfs file at the fileHash's file size is greater than the available quota
+        // If it is, then the node is over quota
+        // If it is not, then the node is not over quota
+
+        // Get the size of the file
+
         return false;
     }
 

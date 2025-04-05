@@ -3,6 +3,7 @@ import { LocalhostNodeAdapter } from '../ipfs/adapter.localhost';
 import { RemoteNode, RemoteNodeAdapter } from '../ipfs/adapter.remote';
 import { nodes, createNode } from '../shared';
 import { IpfsType } from '../ipfs/enums';
+import { content_hash_map } from '../ipfs/adapter.manager';
 import { graphql } from "ponder";
 import { db } from "ponder:api";
 import schema from "ponder:schema";
@@ -34,7 +35,7 @@ app.post('/nodes', async (c) => {
         id: new_node.id,
         name: new_node.name,
         type: IpfsType[new_node.type],
-        url: new_node.url
+        url: new_node.url,
     }});
 });
 
@@ -46,7 +47,7 @@ app.get('/nodes', async (c) => {
                 id: node.id,
                 name: node.name,
                 type: IpfsType[node.type], // Convert the type to its typename
-                url: node.url
+                url: node.url,
             }
         })
     });
@@ -90,6 +91,21 @@ app.delete('/nodes/:id', async (c) => {
     nodes.splice(nodeIndex, 1);
     return c.json({ message: `Node with ID ${id} deleted` });
 });
+
+app.get("/hosted", async (c) => {
+    let users: { name: string; node: string; hash: string; file_size: number}[] = []
+    content_hash_map.forEach(
+        (value, key) => {
+            users.push({
+                name: value[1],
+                node: key,
+                hash: value[0],
+                file_size: value[2]
+            });
+        }
+    )
+    return c.json({ message: 'List of users', users: users });
+})
 
 /// display the statistics of the nodes
 app.get('/stats/', async (c) => {
