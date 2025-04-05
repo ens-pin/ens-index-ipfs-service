@@ -11,8 +11,7 @@ import schema from "ponder:schema";
 
 const app = new Hono();
 
-app.use(cors());
-app.use("/graphql", graphql({ db, schema }));
+app.use( "*", cors());
  
 // Utility function to format node details
 const formatNode = (node: any) => ({
