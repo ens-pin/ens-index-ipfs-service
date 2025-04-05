@@ -42,8 +42,12 @@ export class RemoteNodeAdapter extends IpfsNodeAdapter {
                 console.log("Error pinning file: ", onrejected);
             }
         )
-        let value = await this.ipfs_client.files.stat("/ipfs/" + fileHash)
-        return value.size
+        try{
+            let value = await this.ipfs_client.files.stat("/ipfs/" + fileHash)
+            return value.size
+        }catch(e){
+            return 0
+        }
     }
 
     public async unpinFile(fileHash: string): Promise<void> {
@@ -56,6 +60,11 @@ export class RemoteNodeAdapter extends IpfsNodeAdapter {
                 console.log("Error unpinning file: ", onrejected);
             }
         )
+    }
+
+    public async getFileSize(fileHash: string): Promise<number> {
+        let value = await this.ipfs_client.files.stat("/ipfs/" + fileHash)
+        return value.size
     }
 
     public isOverQuota(fileHash: String): boolean{

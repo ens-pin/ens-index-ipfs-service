@@ -57,6 +57,7 @@ export async function pinFile(name: string, transaction_data_node: string, fileH
         }
     }
     content_hash_map.set(transaction_data_node, [fileHash, name, 0]);
+    console.log("setting hashmap")
 
     /// check if the file has already been pinned in the services we are using
     // if yes, then we skip pinning
@@ -66,8 +67,10 @@ export async function pinFile(name: string, transaction_data_node: string, fileH
     let pinReference = content_hash_list.find(pin => pin.hash === fileHash);
     if (pinReference) {
         pinReference.count++;
+        console.log("pin reference exists somewhere")
         return;
     }
+
     pinReference = new PinReference(fileHash, 1);
     content_hash_list.push(pinReference);
 
@@ -80,8 +83,10 @@ export async function pinFile(name: string, transaction_data_node: string, fileH
             /// Pin on all devices at the same time
             let setup = false
             nodes.forEach(async (node) => {
-                let file_size = await node.node_adapter.pinFile(fileHash)
-                if (file_size > 0) {
+                console.log("file is being pinned")
+                await node.node_adapter.pinFile(fileHash)
+                let file_size = await node.node_adapter.getFileSize(fileHash)
+                if (!setup) {
                     content_hash_map.set(transaction_data_node, [fileHash, name, file_size]);
                     setup = true;
                 }
@@ -91,7 +96,13 @@ export async function pinFile(name: string, transaction_data_node: string, fileH
             // Pin on one device, then move to another
             if(nodes[next_node] != undefined){
                 if (nodes[next_node]?.node_adapter) {
-                    content_hash_map.set(transaction_data_node, [fileHash, name, await nodes[next_node]?.node_adapter.pinFile(fileHash) ?? 0]);
+                    await nodes[next_node]?.node_adapter.pinFile(fileHash)
+                    let file_size = await nodes[next_node]?.node_adapter.getFileSize(fileHash);
+                    if (file_size !== undefined) {
+                        content_hash_map.set(transaction_data_node, [fileHash, name, file_size]);
+                    } else {
+                        console.error(`Failed to retrieve file size for hash: ${fileHash}`);
+                    }
                 }
             }
             next_node = (next_node + 1) % nodes.length;

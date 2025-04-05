@@ -16,18 +16,28 @@ export class LocalhostNodeAdapter extends IpfsNodeAdapter {
         )
     }
     /// pin the file to the IPFS node
-    public async pinFile(fileHash: string): Promise<number> {
-        await this.ipfs_client.get(fileHash);
+    public async pinFile(fileHash: string): Promise<void> {
+        console.log("start pinning")
         this.ipfs_client.pin.add(fileHash).then(
             value => {
+                console.log("pinning file done")
                 this.ipfs_client.routing.provide(fileHash)
             },
             onrejected => {
+                console.log("error pinning file")
                 console.log("Error pinning file: ", onrejected);
             }
         )
-        let value = await this.ipfs_client.files.stat("/ipfs/" + fileHash)
-        return value.size
+
+    }
+
+    public async getFileSize(fileHash: string): Promise<number> {
+        try{
+            let value = await this.ipfs_client.files.stat("/ipfs/" + fileHash)
+            return value.size
+        }catch(e){
+            return 0
+        }
     }
 
 

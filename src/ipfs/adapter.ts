@@ -24,6 +24,10 @@ export class IpfsNodeAdapter {
         return Promise.resolve();
     }
 
+    public async getFileSize(fileHash: string): Promise<number> {
+        return Promise.resolve(0);
+    }
+
     public isOverQuota(fileHash: string): boolean{
         return false;
     }
