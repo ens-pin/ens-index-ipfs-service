@@ -9,7 +9,6 @@ import { db } from "ponder:api";
 import schema from "ponder:schema";
 
 const app = new Hono();
-app.use("/", graphql({ db, schema }));
 app.use("/graphql", graphql({ db, schema }));
  
 // Utility function to format node details
