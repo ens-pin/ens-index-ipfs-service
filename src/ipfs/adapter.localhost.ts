@@ -9,7 +9,9 @@ export class LocalhostNodeAdapter extends IpfsNodeAdapter {
 
     constructor() {
         super();
-        this.ipfsClient = create({ url: "http://127.0.0.1:5001" });
+        const isInsideContainer = process.env.HOSTNAME?.includes("docker");
+        const ipfsUrl = isInsideContainer ? "http://host.docker.internal:5001" : "http://127.0.0.1:5001";
+        this.ipfsClient = create({ url: ipfsUrl });
     }
 
     /**
