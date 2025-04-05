@@ -28,6 +28,19 @@ export class LocalhostNodeAdapter extends IpfsNodeAdapter {
         )
     }
 
+
+    public async unpinFile(fileHash: string): Promise<void> {
+        // unpin the file from the IPFS node
+        this.ipfs_client.pin.rm(fileHash).then(
+            value => {
+                this.ipfs_client.repo.gc();
+            },
+            onrejected => {
+                console.log("Error unpinning file: ", onrejected);
+            }
+        )
+    }
+
     public isOverQuota(): boolean{
         return false;
     }

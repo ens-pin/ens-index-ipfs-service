@@ -29,7 +29,7 @@ app.post('/nodes', async (c) => {
         id: new_node.id,
         name: new_node.name,
         type: IpfsType[new_node.type],
-        url: new_node.url
+        url: new_node.url,
     }});
 });
 
@@ -41,7 +41,7 @@ app.get('/nodes', async (c) => {
                 id: node.id,
                 name: node.name,
                 type: IpfsType[node.type], // Convert the type to its typename
-                url: node.url
+                url: node.url,
             }
         })
     });
