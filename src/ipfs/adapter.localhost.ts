@@ -1,5 +1,7 @@
 import { IpfsNodeAdapter } from "./adapter";
 import { create, KuboRPCClient } from "kubo-rpc-client";
+import * as dotenv from "dotenv";
+dotenv.config();
 
 /**
  * Adapter for interacting with a localhost IPFS node.
