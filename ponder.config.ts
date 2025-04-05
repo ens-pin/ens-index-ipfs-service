@@ -25,4 +25,8 @@ export default createConfig({
       startBlock: "latest"
     }
   },
+  database: {
+    kind: "postgres",
+    connectionString: process.env.PONDER_DATABASE_URL,
+  }
 });

@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: ens-index-postgres
+    environment:
+      POSTGRES_USER: ponder
+      POSTGRES_PASSWORD: ponder
+      POSTGRES_DB: ens_index
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ponder -d ens_index"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+    name: ens-index-postgres-data

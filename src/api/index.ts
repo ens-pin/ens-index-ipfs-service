@@ -1,12 +1,16 @@
 import { Hono } from 'hono';
+import { cors } from 'hono/cors';
 import { LocalhostNodeAdapter } from '../ipfs/adapter.localhost';
 import { RemoteNode, RemoteNodeAdapter } from '../ipfs/adapter.remote';
 import { nodes, createNode } from '../shared';
 import { IpfsType } from '../ipfs/enums';
 import { contentHashMap } from '../ipfs/adapter.manager';
 
+
 const app = new Hono();
 
+app.use( "*", cors());
+ 
 // Utility function to format node details
 const formatNode = (node: any) => ({
     id: node.id,
