@@ -2,6 +2,7 @@ import { createConfig } from "ponder";
 import { http } from "viem";
 
 import { ensContentHashEventAbi } from "./abis/ensContentHashEventAbi";
+import { ensNameWrapperAbi } from "./abis/ensNameWrapperAbi";
 
 export default createConfig({
   networks: {
@@ -15,6 +16,12 @@ export default createConfig({
       abi: ensContentHashEventAbi,
       network: "sepolia",
       filter: { event: "ContenthashChanged", args: {} },
+      startBlock: "latest"
+    },
+    ensNameWrapper: {
+      abi: ensNameWrapperAbi,
+      address: "0x0635513f179D50A207757E05759CbD106d7dFcE8",
+      network: "sepolia",
       startBlock: "latest"
     }
   },

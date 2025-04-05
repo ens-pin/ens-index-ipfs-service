@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@ensdomains/content-hash": "^3.0.0",
+    "@ensdomains/ensjs": "^4.0.2",
     "@ponder/core": "^0.7.17",
     "@pulumi/digitalocean": "^4.41.0",
     "@pulumi/pulumi": "^3.160.0",

@@ -10,7 +10,9 @@ import { RemoteNodeAdapter } from "./adapter.remote";
 let next_node = 0;
 
 // store how ens names are related to the file hashes
-const content_hash_map: Map<string, string> = new Map<string, string>();
+// key string is the node id
+// value [0] is the file hash, [1] is the ens name, [2] is the size of the file
+export const content_hash_map: Map<string,[string, string, number]> = new Map<string, [string, string, number]>();
 
 /// @description: manages how many pins are there for each file to manage whether it should be pinned or nto
 class PinReference{
@@ -30,12 +32,12 @@ const content_hash_list: PinReference[] = [];
 /// 2. Check if the file is already pinned in the nodes
 /// 3. Check what pinning strategy is preferred by the user (sequential: finish pinning in one device first before moving to another, parallel: slowly fill up storage in all the devices, backup: pin the files in all devices)
 /// 4. Pin with the relevant strategy on the relevant nodes
-export async function pinFile(transaction_data_node: string, fileHash: string): Promise<void> {
+export async function pinFile(name: string, transaction_data_node: string, fileHash: string): Promise<void> {
 
     // remove the previous fileHash from wherever we pinned
     // we will in fact check count how many references are there
     // if there is only one reference (this is the last one), then we remove the fileHash from the list
-    const previousFileHash = content_hash_map.get(transaction_data_node);
+    const previousFileHash = content_hash_map.get(transaction_data_node)?.[0];
     if (previousFileHash) {
         console.log(previousFileHash);
         const previousPinReference = content_hash_list.find(pin => pin.hash === previousFileHash);
@@ -54,10 +56,13 @@ export async function pinFile(transaction_data_node: string, fileHash: string): 
             }
         }
     }
-    content_hash_map.set(transaction_data_node, fileHash);
+    content_hash_map.set(transaction_data_node, [fileHash, name, 0]);
 
     /// check if the file has already been pinned in the services we are using
     // if yes, then we skip pinning
+    if(fileHash == ""){
+        return;
+    }
     let pinReference = content_hash_list.find(pin => pin.hash === fileHash);
     if (pinReference) {
         pinReference.count++;
@@ -73,15 +78,20 @@ export async function pinFile(transaction_data_node: string, fileHash: string): 
             break;
         case IpfsPinType.Parallel:
             /// Pin on all devices at the same time
+            let setup = false
             nodes.forEach(async (node) => {
-                await node.node_adapter.pinFile(fileHash)
+                let file_size = await node.node_adapter.pinFile(fileHash)
+                if (file_size > 0) {
+                    content_hash_map.set(node.id, [fileHash, name, file_size]);
+                    setup = true;
+                }
             })
             break;
         case IpfsPinType.Distributed:
             // Pin on one device, then move to another
             if(nodes[next_node] != undefined){
                 if (nodes[next_node]?.node_adapter) {
-                    await nodes[next_node]?.node_adapter.pinFile(fileHash);
+                    content_hash_map.set(transaction_data_node, [fileHash, name, await nodes[next_node]?.node_adapter.pinFile(fileHash) ?? 0]);
                 }
             }
             next_node = (next_node + 1) % nodes.length;

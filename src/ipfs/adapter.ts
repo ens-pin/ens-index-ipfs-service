@@ -15,8 +15,8 @@ export class IpfsNodeAdapter {
         this.quota_used = quota_used;
     }
     /// pin the file to the IPFS node
-    public async pinFile(fileHash: string): Promise<void> {
-        return Promise.resolve();
+    public async pinFile(fileHash: string): Promise<number> {
+        return Promise.resolve(0);
     }
 
     // unpin the file from the IPFS node
