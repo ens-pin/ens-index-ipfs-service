@@ -3,9 +3,14 @@ import { LocalhostNodeAdapter } from '../ipfs/adapter.localhost';
 import { RemoteNode, RemoteNodeAdapter } from '../ipfs/adapter.remote';
 import { nodes, createNode } from '../shared';
 import { IpfsType } from '../ipfs/enums';
+import { graphql } from "ponder";
+import { db } from "ponder:api";
+import schema from "ponder:schema";
 
 const app = new Hono();
-
+app.use("/", graphql({ db, schema }));
+app.use("/graphql", graphql({ db, schema }));
+ 
 app.post('/nodes', async (c) => {
     const body = await c.req.parseBody({
         dot: true
