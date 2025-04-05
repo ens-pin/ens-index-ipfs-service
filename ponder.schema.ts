@@ -58,3 +58,24 @@ export const pinning_metrics = onchainTable("pinning_metrics", (t) => ({
   timestamp: t.timestamp().notNull(), // When this metric was recorded
   period: t.text().notNull() // hourly, daily, weekly, monthly
 }));
+
+/// Track detailed metadata for IPFS files
+export const file_metadata = onchainTable("file_metadata", (t) => ({
+  cid: t.text().primaryKey(), // IPFS CID as primary key
+  size: t.integer(), // File size in bytes
+  mime_type: t.text(), // File type/content type
+  first_seen: t.timestamp().notNull(), // When the file was first discovered
+  last_accessed: t.timestamp(), // Last time the file was accessed
+  availability: t.boolean().notNull().default(true), // Whether the file is still available
+  content_change_id: t.text().notNull(), // Reference to content_changes.id that introduced this file
+}));
+
+/// Track blockchain sync status and progress
+export const sync_status = onchainTable("sync_status", (t) => ({
+  id: t.text().primaryKey(), // Network identifier as primary key
+  last_block: t.integer().notNull(), // Last processed block number
+  network: t.text().notNull(), // Network identifier (mainnet, goerli, etc)
+  status: t.text().notNull(), // Current sync status (syncing, paused, error)
+  last_sync: t.timestamp().notNull(), // Last successful sync timestamp
+  error: t.text(), // Latest error message if any
+}));
