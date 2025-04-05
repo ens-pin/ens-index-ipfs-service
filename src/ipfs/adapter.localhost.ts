@@ -26,7 +26,7 @@ export class LocalhostNodeAdapter extends IpfsNodeAdapter {
                 console.log("Error pinning file: ", onrejected);
             }
         )
-        let value = await this.ipfs_client.files.stat(fileHash)
+        let value = await this.ipfs_client.files.stat("/ipfs/" + fileHash)
         return value.size
     }
 

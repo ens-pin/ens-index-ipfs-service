@@ -82,7 +82,7 @@ export async function pinFile(name: string, transaction_data_node: string, fileH
             nodes.forEach(async (node) => {
                 let file_size = await node.node_adapter.pinFile(fileHash)
                 if (file_size > 0) {
-                    content_hash_map.set(node.id, [fileHash, name, file_size]);
+                    content_hash_map.set(transaction_data_node, [fileHash, name, file_size]);
                     setup = true;
                 }
             })
