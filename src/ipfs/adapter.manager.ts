@@ -1,102 +1,120 @@
-/// @description: manages the adapters
+/// @description: Manages the adapters and pinning strategies
 import { create } from "kubo-rpc-client";
 
-import { ipfs_pin_type } from "../shared";
+import { ipfsPinType } from "../shared";
 import { LocalhostNodeAdapter } from "./adapter.localhost";
 import { IpfsPinType, IpfsType } from "./enums";
 import { nodes } from "../shared";
 import { RemoteNodeAdapter } from "./adapter.remote";
 
-let next_node = 0;
+let nextNodeIndex = 0;
 
-// store how ens names are related to the file hashes
-// key string is the node id
-// value [0] is the file hash, [1] is the ens name, [2] is the size of the file
-export const content_hash_map: Map<string,[string, string, number]> = new Map<string, [string, string, number]>();
+// Map to store how ENS names are related to file hashes
+// Key: Node ID
+// Value: [file hash, ENS name, file size]
+export const contentHashMap: Map<string, [string, string, number]> = new Map();
 
-/// @description: manages how many pins are there for each file to manage whether it should be pinned or nto
-class PinReference{
-    hash: string  // hash of the file
-    count: number // number of references to the file
+// Class to manage pin references for files
+class PinReference {
+    hash: string;  // Hash of the file
+    count: number; // Number of references to the file
 
-    constructor(hash: string, count: number){
+    constructor(hash: string, count: number) {
         this.hash = hash;
         this.count = count;
     }
 }
 
-const content_hash_list: PinReference[] = [];
+const contentHashList: PinReference[] = [];
 
-/// Here's the list of things this function do
-/// 1. Check all the nodes that are available (local, cloud, pinata)
-/// 2. Check if the file is already pinned in the nodes
-/// 3. Check what pinning strategy is preferred by the user (sequential: finish pinning in one device first before moving to another, parallel: slowly fill up storage in all the devices, backup: pin the files in all devices)
-/// 4. Pin with the relevant strategy on the relevant nodes
-export async function pinFile(name: string, transaction_data_node: string, fileHash: string): Promise<void> {
-
-    // remove the previous fileHash from wherever we pinned
-    // we will in fact check count how many references are there
-    // if there is only one reference (this is the last one), then we remove the fileHash from the list
-    const previousFileHash = content_hash_map.get(transaction_data_node)?.[0];
+/**
+ * Pins a file based on the specified pinning strategy.
+ * 
+ * @param name - The ENS name associated with the file.
+ * @param transactionDataNode - The node ID for the transaction data.
+ * @param fileHash - The hash of the file to be pinned.
+ */
+export async function pinFile(name: string, transactionDataNode: string, fileHash: string): Promise<void> {
+    // Handle unpinning of the previous file hash if it exists
+    const previousFileHash = contentHashMap.get(transactionDataNode)?.[0];
     if (previousFileHash) {
-        console.log(previousFileHash);
-        const previousPinReference = content_hash_list.find(pin => pin.hash === previousFileHash);
+        const previousPinReference = contentHashList.find(pin => pin.hash === previousFileHash);
         if (previousPinReference) {
-            console.log(previousPinReference.count);
             previousPinReference.count--;
-            if (previousPinReference.count == 0) {
-                content_hash_list.splice(content_hash_list.indexOf(previousPinReference), 1);
-                // remove the fileHash from all devices
-                console.log("trying to remove");
-                nodes.forEach(
-                    async (node) => {
-                        await node.node_adapter.unpinFile(previousFileHash);
-                    }
-                )
+            if (previousPinReference.count === 0) {
+                contentHashList.splice(contentHashList.indexOf(previousPinReference), 1);
+                // Unpin the file hash from all nodes
+                for (const node of nodes) {
+                    await node.nodeAdapter.unpinFile(previousFileHash);
+                }
             }
         }
     }
-    content_hash_map.set(transaction_data_node, [fileHash, name, 0]);
 
-    /// check if the file has already been pinned in the services we are using
-    // if yes, then we skip pinning
-    if(fileHash == ""){
+    // Update the content hash map with the new file hash
+    contentHashMap.set(transactionDataNode, [fileHash, name, 0]);
+
+    // Skip pinning if the file hash is empty
+    if (!fileHash) {
+        contentHashMap.delete(transactionDataNode);
         return;
     }
-    let pinReference = content_hash_list.find(pin => pin.hash === fileHash);
+
+    // Check if the file is already pinned
+    let pinReference = contentHashList.find(pin => pin.hash === fileHash);
     if (pinReference) {
         pinReference.count++;
         return;
     }
-    pinReference = new PinReference(fileHash, 1);
-    content_hash_list.push(pinReference);
 
-    // pin the new file with the relevant strategy
-    switch(ipfs_pin_type){
+    // Add a new pin reference for the file
+    pinReference = new PinReference(fileHash, 1);
+    contentHashList.push(pinReference);
+
+    // Pin the file based on the selected strategy
+    switch (ipfsPinType) {
         case IpfsPinType.Sequential:
-            // Finish pinning on one device before moving to another
-            break;
-        case IpfsPinType.Parallel:
-            /// Pin on all devices at the same time
-            let setup = false
-            nodes.forEach(async (node) => {
-                let file_size = await node.node_adapter.pinFile(fileHash)
-                if (file_size > 0) {
-                    content_hash_map.set(transaction_data_node, [fileHash, name, file_size]);
-                    setup = true;
-                }
-            })
-            break;
-        case IpfsPinType.Distributed:
-            // Pin on one device, then move to another
-            if(nodes[next_node] != undefined){
-                if (nodes[next_node]?.node_adapter) {
-                    content_hash_map.set(transaction_data_node, [fileHash, name, await nodes[next_node]?.node_adapter.pinFile(fileHash) ?? 0]);
+            // Sequential: Finish pinning on one device before moving to another
+            for (const node of nodes) {
+                await node.nodeAdapter.pinFile(fileHash);
+                const fileSize = await node.nodeAdapter.getFileSize(fileHash);
+                if (fileSize !== undefined) {
+                    contentHashMap.set(transactionDataNode, [fileHash, name, fileSize]);
+                    break;
                 }
             }
-            next_node = (next_node + 1) % nodes.length;
             break;
+
+        case IpfsPinType.Parallel:
+            // Parallel: Pin on all devices simultaneously
+            let isSetup = false;
+            for (const node of nodes) {
+                await node.nodeAdapter.pinFile(fileHash);
+                const fileSize = await node.nodeAdapter.getFileSize(fileHash);
+                if (!isSetup && fileSize !== undefined) {
+                    contentHashMap.set(transactionDataNode, [fileHash, name, fileSize]);
+                    isSetup = true;
+                }
+            }
+            break;
+
+        case IpfsPinType.Distributed:
+            // Distributed: Pin on one device, then move to the next
+            const currentNode = nodes[nextNodeIndex];
+            if (currentNode?.nodeAdapter) {
+                await currentNode.nodeAdapter.pinFile(fileHash);
+                const fileSize = await currentNode.nodeAdapter.getFileSize(fileHash);
+                if (fileSize !== undefined) {
+                    contentHashMap.set(transactionDataNode, [fileHash, name, fileSize]);
+                } else {
+                    console.error(`Failed to retrieve file size for hash: ${fileHash}`);
+                }
+            }
+            nextNodeIndex = (nextNodeIndex + 1) % nodes.length;
+            break;
+
         default:
+            console.warn("Unknown pinning strategy. No action taken.");
             break;
     }
 }
