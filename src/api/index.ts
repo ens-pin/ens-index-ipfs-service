@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { cors } from 'hono/cors';
 import { LocalhostNodeAdapter } from '../ipfs/adapter.localhost';
 import { RemoteNode, RemoteNodeAdapter } from '../ipfs/adapter.remote';
 import { nodes, createNode } from '../shared';
@@ -9,6 +10,8 @@ import { db } from "ponder:api";
 import schema from "ponder:schema";
 
 const app = new Hono();
+
+app.use(cors());
 app.use("/graphql", graphql({ db, schema }));
  
 // Utility function to format node details
