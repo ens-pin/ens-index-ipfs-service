@@ -31,14 +31,12 @@ export class RemoteNodeAdapter extends IpfsNodeAdapter {
         )
     }
 
-    /// pin the file to the IPFS node
+    /// pin the file to the remote IPFS node
     public async pinFile(fileHash: string): Promise<void> {
         await this.ipfs_client.get(fileHash);
         this.ipfs_client.pin.add(fileHash).then(
             value => {
-                console.log(value)
                 this.ipfs_client.routing.provide(fileHash)
-                console.log(fileHash);
             },
             onrejected => {
                 console.log("Error pinning file: ", onrejected);

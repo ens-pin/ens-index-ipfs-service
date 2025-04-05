@@ -5,6 +5,7 @@ export enum IpfsType {
 }
 
 export enum IpfsPinType {
-    Sequential, // pin on one device before moving to another
-    Parallel    // pin on all devices at the same time
+    Sequential,     // pin on one device before moving to another
+    Parallel,       // pin on all devices at the same time
+    Distributed,    // for all available devices, pin on one device, then move to another
 }

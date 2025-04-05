@@ -17,13 +17,10 @@ export class LocalhostNodeAdapter extends IpfsNodeAdapter {
     }
     /// pin the file to the IPFS node
     public async pinFile(fileHash: string): Promise<void> {
-        
         await this.ipfs_client.get(fileHash);
         this.ipfs_client.pin.add(fileHash).then(
             value => {
-                console.log(value)
                 this.ipfs_client.routing.provide(fileHash)
-                console.log(fileHash);
             },
             onrejected => {
                 console.log("Error pinning file: ", onrejected);
@@ -33,6 +30,10 @@ export class LocalhostNodeAdapter extends IpfsNodeAdapter {
 
     public isOverQuota(): boolean{
         return false;
+    }
+
+    public adjustQuota(new_quota: BigInt): void{
+        this.ipfs_client
     }
 
     public async getQuotaRange(): Promise<[bigint, bigint]> {

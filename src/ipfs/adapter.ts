@@ -19,7 +19,7 @@ export class IpfsNodeAdapter {
         return Promise.resolve();
     }
 
-    public isOverQuota(): boolean{
+    public isOverQuota(fileHash: string): boolean{
         return false;
     }
 
