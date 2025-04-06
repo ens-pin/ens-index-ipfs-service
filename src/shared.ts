@@ -52,5 +52,5 @@ export function setIpfsPinType(type: IpfsPinType): void {
 
 // Predefined list of nodes
 export const nodes: Node[] = [
-    createNode("localhost", IpfsType.localhost, "http://127.0.0.1:5001"), // Localhost node
+    createNode("localhost", IpfsType.localhost, process.env.IPFS_API_URL || "http://127.0.0.1:5001"), // Using env var with fallback
 ];

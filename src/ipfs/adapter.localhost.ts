@@ -1,7 +1,5 @@
 import { IpfsNodeAdapter } from "./adapter";
 import { create, KuboRPCClient } from "kubo-rpc-client";
-import * as dotenv from "dotenv";
-dotenv.config();
 
 /**
  * Adapter for interacting with a localhost IPFS node.
@@ -11,9 +9,7 @@ export class LocalhostNodeAdapter extends IpfsNodeAdapter {
 
     constructor() {
         super();
-        const isInsideContainer = process.env.IS_DOCKER === "true";
-        const ipfsUrl = isInsideContainer ? "http://host.docker.internal:5001" : "http://127.0.0.1:5001";
-        this.ipfsClient = create({ url: ipfsUrl });
+        this.ipfsClient = create({ url: process.env.IPFS_API_URL || "http://127.0.0.1:5001" });
     }
 
     /**
