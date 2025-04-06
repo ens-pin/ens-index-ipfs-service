@@ -5,6 +5,10 @@ import { IpfsType, IpfsPinType } from "./ipfs/enums"; // Enums for IPFS types an
 
 let currentId = 0; // Counter to generate unique IDs for nodes
 
+// Get IPFS node URL from environment variable
+const IPFS_NODE_URL = process.env.IPFS_API_URL || "http://127.0.0.1:5001";
+console.log(`Connecting to IPFS node at: ${IPFS_NODE_URL}`); // Add logging to help debug
+
 export class Node {
     id: string; // Unique identifier for the node
     name: string; // Human-readable name of the node
@@ -24,7 +28,7 @@ export class Node {
     private createNodeAdapter(type: IpfsType, url: string): IpfsNodeAdapter {
         switch (type) {
             case IpfsType.localhost:
-                return new LocalhostNodeAdapter(); // Adapter for localhost nodes
+                return new LocalhostNodeAdapter(IPFS_NODE_URL); // Pass the configured URL
             case IpfsType.cloud:
                 return new RemoteNodeAdapter(url); // Adapter for remote/cloud nodes
             default:
@@ -52,5 +56,5 @@ export function setIpfsPinType(type: IpfsPinType): void {
 
 // Predefined list of nodes
 export const nodes: Node[] = [
-    createNode("localhost", IpfsType.localhost, "http://127.0.0.1:5001"), // Localhost node
+    createNode("localhost", IpfsType.localhost, IPFS_NODE_URL), // Use configured URL
 ];
