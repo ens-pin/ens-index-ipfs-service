@@ -28,7 +28,10 @@ export class RemoteNodeAdapter extends IpfsNodeAdapter {
 
     constructor(node_ipfs_url: string) {
         super();
-        this.ipfs_client = create({ url: node_ipfs_url });
+        this.ipfs_client = create({ 
+            url: node_ipfs_url,
+            timeout: 60000 // 60 second timeout for operations
+        });
     }
 
     /**
@@ -38,20 +41,22 @@ export class RemoteNodeAdapter extends IpfsNodeAdapter {
      */
     public async pinFile(fileHash: string): Promise<number> {
         try {
-            // Ensure the file is available on the node
-            await this.ipfs_client.get(fileHash);
-
-            // Pin the file
-            await this.ipfs_client.pin.add(fileHash);
-
-            // Provide the file to the network
-            await this.ipfs_client.routing.provide(fileHash);
+            // Pin the file - this will automatically fetch the content if needed
+            await this.ipfs_client.pin.add(fileHash, {
+                timeout: 120000 // 2 minute timeout for pinning specifically
+            });
 
             // Retrieve and return the file size
-            const fileStats = await this.ipfs_client.files.stat(`/ipfs/${fileHash}`);
+            const fileStats = await this.ipfs_client.files.stat(`/ipfs/${fileHash}`, {
+                timeout: 30000 // 30 second timeout for stat operation
+            });
             return fileStats.size;
-        } catch (error) {
-            console.error("Error pinning file:", error);
+        } catch (error: any) {
+            if (error?.name === 'HeadersTimeoutError' || error?.name === 'TimeoutError') {
+                console.error(`Timeout while pinning file ${fileHash}. Consider increasing timeout values if this happens frequently.`);
+            } else {
+                console.error("Error pinning file:", error);
+            }
             return 0;
         }
     }
@@ -62,13 +67,21 @@ export class RemoteNodeAdapter extends IpfsNodeAdapter {
      */
     public async unpinFile(fileHash: string): Promise<void> {
         try {
-            // Remove the pin
-            await this.ipfs_client.pin.rm(fileHash);
+            // Remove the pin with timeout
+            await this.ipfs_client.pin.rm(fileHash, {
+                timeout: 30000 // 30 second timeout for unpinning
+            });
 
-            // Trigger garbage collection
-            await this.ipfs_client.repo.gc();
-        } catch (error) {
-            console.error("Error unpinning file:", error);
+            // Trigger garbage collection with timeout
+            await this.ipfs_client.repo.gc({
+                timeout: 60000 // 60 second timeout for garbage collection
+            });
+        } catch (error: any) {
+            if (error?.name === 'HeadersTimeoutError' || error?.name === 'TimeoutError') {
+                console.error(`Timeout while unpinning file ${fileHash}`);
+            } else {
+                console.error("Error unpinning file:", error);
+            }
         }
     }
 
@@ -79,10 +92,16 @@ export class RemoteNodeAdapter extends IpfsNodeAdapter {
      */
     public async getFileSize(fileHash: string): Promise<number> {
         try {
-            const fileStats = await this.ipfs_client.files.stat(`/ipfs/${fileHash}`);
+            const fileStats = await this.ipfs_client.files.stat(`/ipfs/${fileHash}`, {
+                timeout: 30000 // 30 second timeout for stat operation
+            });
             return fileStats.size;
-        } catch (error) {
-            console.error("Error retrieving file size:", error);
+        } catch (error: any) {
+            if (error?.name === 'HeadersTimeoutError' || error?.name === 'TimeoutError') {
+                console.error(`Timeout while getting file size for ${fileHash}`);
+            } else {
+                console.error("Error retrieving file size:", error);
+            }
             return 0;
         }
     }
