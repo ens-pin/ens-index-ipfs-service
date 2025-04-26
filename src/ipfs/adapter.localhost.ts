@@ -13,7 +13,7 @@ export class LocalhostNodeAdapter extends IpfsNodeAdapter {
         super();
         //const isInsideContainer = process.env.IS_DOCKER === "true";
         //const ipfsUrl = isInsideContainer ? "http://167.71.202.173:5001" : "http://127.0.0.1:5001";
-        this.ipfsClient = create({ url: "http://167.71.202.173:5001" });
+        this.ipfsClient = create({ url: "http://152.42.175.86:5001" });
     }
 
     /**
